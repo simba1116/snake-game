@@ -3,8 +3,8 @@ const ctx = canvas.getContext('2d');
 const scoreElement = document.getElementById('scoreValue');
 
 // 设置画布大小
-canvas.width = 400;
-canvas.height = 400;
+canvas.width = Math.min(400, window.innerWidth - 20);
+canvas.height = Math.min(400, window.innerHeight - 100);
 
 // 游戏配置
 const gridSize = 20;
@@ -242,3 +242,39 @@ drawGame();
 // 添加按钮事件监听
 startBtn.addEventListener('click', startGame);
 endBtn.addEventListener('click', endGame);
+
+// 在文件末尾添加触摸控制代码
+let touchStartX = 0;
+let touchStartY = 0;
+
+canvas.addEventListener('touchstart', (e) => {
+    if (!gameRunning) return;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    e.preventDefault();
+});
+
+canvas.addEventListener('touchmove', (e) => {
+    if (!gameRunning) return;
+    e.preventDefault();
+});
+
+canvas.addEventListener('touchend', (e) => {
+    if (!gameRunning) return;
+    
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+    
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+        if (deltaX > 0 && dx !== -1) { dx = 1; dy = 0; }
+        else if (deltaX < 0 && dx !== 1) { dx = -1; dy = 0; }
+    } else {
+        if (deltaY > 0 && dy !== -1) { dx = 0; dy = 1; }
+        else if (deltaY < 0 && dy !== 1) { dx = 0; dy = -1; }
+    }
+    
+    e.preventDefault();
+});
