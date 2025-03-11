@@ -15,8 +15,16 @@
             <div class="controls">
                 <div class="score">得分: <span id="scoreValue">0</span></div>
                 <div class="buttons">
-                    <button id="startBtn" class="btn">开始游戏</button>
-                    <button id="endBtn" class="btn">结束游戏</button>
+                    <!-- 在按钮区域添加 -->
+                    <div class="controls">
+                        <button id="startBtn">开始游戏</button>
+                        <button id="endBtn">结束游戏</button>
+                        <select id="difficulty" onchange="setDifficulty(this.value)">
+                            <option value="easy">简单</option>
+                            <option value="medium">中等</option>
+                            <option value="hard">困难</option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>

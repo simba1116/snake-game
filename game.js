@@ -7,9 +7,17 @@ canvas.width = Math.min(400, window.innerWidth - 20);
 canvas.height = Math.min(400, window.innerHeight - 100);
 
 // 游戏配置
+// 在游戏配置部分添加新的变量
 const gridSize = 20;
 const tileCount = canvas.width / gridSize;
 let score = 0;
+let highScore = localStorage.getItem('snakeHighScore') || 0; // 添加最高分
+let gameSpeed = 150; // 基础游戏速度
+let isPaused = false; // 暂停状态
+
+// 添加音效
+const eatSound = new Audio('assets/eat.mp3');
+const gameOverSound = new Audio('assets/gameover.mp3');
 
 // 蛇的初始位置和速度
 let snake = [
@@ -42,7 +50,7 @@ function gameLoop() {
 
 // 更新游戏状态
 function updateGame() {
-    if (!gameRunning) return;
+    if (!gameRunning || isPaused) return;
     
     // 移动蛇
     const head = { x: snake[0].x + dx, y: snake[0].y + dy };
@@ -58,7 +66,12 @@ function updateGame() {
     // 检查是否吃到食物
     if (head.x === food.x && head.y === food.y) {
         score += 10;
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('snakeHighScore', highScore);
+        }
         scoreElement.textContent = score;
+        eatSound.play();
         generateFood();
     } else {
         snake.pop();
@@ -149,6 +162,7 @@ function endGame() {
     
     ctx.font = '24px Poppins';
     ctx.fillText(`最终得分: ${score}`, canvas.width/2, canvas.height/2 + 20);
+    ctx.fillText(`最高分: ${highScore}`, canvas.width/2, canvas.height/2 + 60);
 }
 
 // 生成新的食物位置
@@ -195,16 +209,57 @@ function startGame() {
         // 开始新游戏
         gameRunning = true;
         resetGame();
-        gameInterval = setInterval(gameLoop, 150);
+        gameInterval = setInterval(gameLoop, gameSpeed);
         startBtn.textContent = '重新开始';
     }
 }
 
-// 结束游戏
+// 添加暂停功能
+function togglePause() {
+    if (!gameRunning) return;
+    
+    isPaused = !isPaused;
+    if (isPaused) {
+        clearInterval(gameInterval);
+        // 绘制暂停提示
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'white';
+        ctx.font = '30px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('游戏暂停', canvas.width/2, canvas.height/2);
+    } else {
+        gameInterval = setInterval(gameLoop, gameSpeed);
+    }
+}
+
+// 修改更新游戏状态函数
+function updateGame() {
+    if (!gameRunning || isPaused) return;
+    
+    // ... existing code ...
+
+    // 检查是否吃到食物
+    if (head.x === food.x && head.y === food.y) {
+        score += 10;
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem('snakeHighScore', highScore);
+        }
+        scoreElement.textContent = score;
+        eatSound.play();
+        generateFood();
+    } else {
+        snake.pop();
+    }
+}
+
+// 修改结束游戏函数
 function endGame() {
     gameRunning = false;
     clearInterval(gameInterval);
     startBtn.textContent = '开始游戏';
+    gameOverSound.play();
     
     // 绘制游戏结束画面
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
@@ -216,9 +271,33 @@ function endGame() {
     ctx.fillText('得分: ' + score, canvas.width/2, canvas.height/2 + 40);
 }
 
-// 键盘控制
+// 添加难度选择功能
+function setDifficulty(level) {
+    switch(level) {
+        case 'easy':
+            gameSpeed = 150;
+            break;
+        case 'medium':
+            gameSpeed = 100;
+            break;
+        case 'hard':
+            gameSpeed = 70;
+            break;
+    }
+    if (gameRunning) {
+        clearInterval(gameInterval);
+        gameInterval = setInterval(gameLoop, gameSpeed);
+    }
+}
+
+// 添加键盘事件
 document.addEventListener('keydown', (event) => {
-    if (!gameRunning) return;
+    if (event.key === 'p' || event.key === 'P') {
+        togglePause();
+        return;
+    }
+    
+    if (!gameRunning || isPaused) return;
     
     switch (event.key) {
         case 'ArrowUp':
